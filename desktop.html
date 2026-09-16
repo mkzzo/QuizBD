@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quiz: Restrições de Integridade</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --accent: #238636;
+      --danger: #da3633;
+      --text: #c9d1d9;
+      --bright: #ffffff;
+      --code: #58a6ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      margin-bottom: 12px;
+      height: 52px;
+    }
+    .badge {
+      background: rgba(240, 136, 62, 0.15);
+      color: #f0883e;
+      border: 1px solid #f0883e;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .tabs { display: flex; gap: 8px; }
+    .tab {
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 42% 58%;
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .briefing {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid var(--code);
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .briefing code { color: var(--code); font-family: monospace; font-weight: 600; }
+    
+    table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.8rem; background: #090d12; border-radius: 4px; overflow: hidden; }
+    th, td { padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { background: #121820; color: var(--code); }
+    
+    .callout {
+      background: rgba(88, 166, 255, 0.06);
+      border: 1px dashed #388bfd44;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: #8b949e;
+      margin-top: auto;
+    }
+    .callout strong { color: #58a6ff; }
+
+    /* Lado Direito */
+    .question-box {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #f0883e;
+      background: rgba(240, 136, 62, 0.08);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(240, 136, 62, 0.25);
+    }
+    .options { display: flex; flex-direction: column; gap: 8px; }
+    .btn-opt {
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: var(--bright);
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 0.83rem;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.15s;
+    }
+    .btn-opt:hover { background: #30363d; }
+    .btn-opt code { font-family: monospace; color: var(--code); font-size: 0.8rem; }
+    .btn-opt.correct { background: rgba(35, 134, 54, 0.25) !important; border-color: var(--accent) !important; color: #3fb950 !important; }
+    .btn-opt.wrong { background: rgba(218, 54, 51, 0.25) !important; border-color: var(--danger) !important; color: #f85149 !important; }
+    
+    .feedback {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      margin-top: auto;
+    }
+    .feedback.ok { display: block; background: rgba(35, 134, 54, 0.15); border: 1px solid var(--accent); color: #3fb950; }
+    .feedback.err { display: block; background: rgba(218, 54, 51, 0.15); border: 1px solid var(--danger); color: #f85149; }
+    
+    .footer-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+    .btn-act {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-sec { background: #21262d; border: 1px solid var(--border); color: #8b949e; cursor: pointer; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; }
+    
+    /* Tela Final */
+    #win { display: none; text-align: center; margin: auto; max-width: 600px; padding: 30px; }
+    #win h2 { color: #3fb950; font-size: 1.6rem; margin-bottom: 8px; }
+    #win p { color: #8b949e; font-size: 0.9rem; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- Topo -->
+  <header>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="badge">Perícia SQL</span>
+      <h1 style="font-size: 1.05rem; color: var(--bright);">Operação Integridade</h1>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="goStage(0)">Caso 1 (PK)</button>
+      <button class="tab" onclick="goStage(1)">Caso 2 (CHECK)</button>
+      <button class="tab" onclick="goStage(2)">Caso 3 (FK)</button>
+    </div>
+    <span style="font-size: 0.75rem; color: #8b949e;">Atalhos: [1, 2, 3] Resposta | [R] Gabarito | [Enter] Avançar | [F] Fullscreen</span>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="grid" id="main-area">
+    <!-- Coluna 1: Cenário -->
+    <div class="panel">
+      <h2 id="case-title" style="font-size: 0.95rem; color: var(--bright);"></h2>
+      <div class="briefing" id="case-desc"></div>
+      <div id="table-view"></div>
+      <div class="callout" id="case-hint"></div>
+    </div>
+
+    <!-- Coluna 2: Ação -->
+    <div class="panel">
+      <div class="question-box">QUAL COMANDO O SGBD DEVE REJEITAR?</div>
+      <div class="options" id="opt-container"></div>
+      <div class="feedback" id="feedback-box"></div>
+      <div class="footer-btns">
+        <button class="btn-sec" onclick="reveal()">[R] Revelar Gabarito</button>
+        <button class="btn-act" id="btn-next" onclick="nextStage()" style="display: none;">Próximo Caso ➔</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Conclusão -->
+  <div class="panel" id="win">
+    <div style="font-size: 3rem; margin-bottom: 8px;">🛡️</div>
+    <h2>Integridade do Banco Garantida!</h2>
+    <p>Todas as violações de <strong>Entidade (PK)</strong>, <strong>Domínio (CHECK)</strong> e <strong>Referencial (FK)</strong> foram identificadas e bloqueadas pelo motor relacional.</p>
+    <button class="btn-act" onclick="restart()">Reiniciar Dinâmica</button>
+  </div>
+
+  <script>
+    const stages = [
+      {
+        title: "🔍 Caso 1: Integridade de Entidade (PK)",
+        desc: "A tabela <code>CLIENTES</code> possui <code>id_cliente INT PRIMARY KEY</code>. A chave primária exige obrigatoriamente <strong>Unicidade</strong> e <strong>Não-Nulidade</strong>.",
+        table: `<table><thead><tr><th>id_cliente (PK)</th><th>nome</th><th>cpf</th></tr></thead><tbody><tr><td>101</td><td>Alice Dias</td><td>111.222.333-00</td></tr><tr><td>102</td><td>Bruno Lima</td><td>444.555.666-11</td></tr></tbody></table>`,
+        hint: "<strong>Explicação para a turma:</strong> A PK indexa as linhas fisicamente. IDs repetidos impedem o SGBD de distinguir as tuplas no disco.",
+        options: [
+          { text: "Inserir id_cliente = 103 com novo CPF", code: "INSERT INTO CLIENTES VALUES (103, 'Carlos', '777...');", correct: false, reason: "Incorreto. O ID 103 é inédito e não nulo, logo é aceito pelo banco." },
+          { text: "Inserir id_cliente = 101 já existente", code: "INSERT INTO CLIENTES VALUES (101, 'Daniel', '999...');", correct: true, reason: "Correto! Violação de Integridade de Entidade (PK). O ID 101 já existe e viola a unicidade absoluta." },
+          { text: "Atualizar nome de Bruno", code: "UPDATE CLIENTES SET nome = 'Bruno Silva' WHERE id_cliente = 102;", correct: false, reason: "Incorreto. Atualização em atributos não-chave é uma operação rotineira." }
+        ]
+      },
+      {
+        title: "🔍 Caso 2: Integridade de Domínio (CHECK)",
+        desc: "A tabela <code>PRODUTOS</code> define a regra: <code>CHECK (preco > 0 AND estoque >= 0)</code>, restringindo os valores atômicos admitidos.",
+        table: `<table><thead><tr><th>id_produto (PK)</th><th>nome</th><th>preco</th><th>estoque</th></tr></thead><tbody><tr><td>1</td><td>Teclado Gamer</td><td>R$ 150.00</td><td>10</td></tr><tr><td>2</td><td>Mouse Óptico</td><td>R$ 49.90</td><td>0</td></tr></tbody></table>`,
+        hint: "<strong>Explicação para a turma:</strong> A restrição de domínio garante que regras lógicas de negócio sejam validadas direto no motor, antes de gravar.",
+        options: [
+          { text: "Cadastrar com estoque zerado", code: "INSERT INTO PRODUTOS VALUES (3, 'Fone', 80.0, 0);", correct: false, reason: "Incorreto. A cláusula permite estoque >= 0, portanto 0 é válido." },
+          { text: "Inserir preço negativo", code: "UPDATE PRODUTOS SET preco = -25.00 WHERE id_produto = 1;", correct: true, reason: "Perfeito! Violação de Domínio (CHECK). O valor -25.00 fere a restrição lógica 'preco > 0'." },
+          { text: "Atualizar para preço promocional", code: "UPDATE PRODUTOS SET preco = 99.90 WHERE id_produto = 1;", correct: false, reason: "Incorreto. R$ 99.90 é um valor positivo normal." }
+        ]
+      },
+      {
+        title: "🔍 Caso 3: Integridade Referencial (FK & RESTRICT)",
+        desc: "A tabela <code>PEDIDOS</code> possui a restrição: <code>FOREIGN KEY (cliente_id) REFERENCES CLIENTES(id_cliente) ON DELETE RESTRICT</code>.",
+        table: `<table><thead><tr><th>id_pedido (PK)</th><th>cliente_id (FK)</th><th>valor</th></tr></thead><tbody><tr><td>5001</td><td>101</td><td>R$ 350.00</td></tr></tbody></table>`,
+        hint: "<strong>Explicação para a turma:</strong> Com ON DELETE RESTRICT, o SGBD impede a deleção do pai para evitar a geração de registros órfãos.",
+        options: [
+          { text: "Cliente é apagado e pedido fica órfão", code: "DELETE FROM CLIENTES WHERE id_cliente = 101;", correct: false, reason: "Incorreto. Uma chave estrangeira ativa serve exatamente para proibir isso." },
+          { text: "O pedido 5001 é apagado em cascata", code: "DELETE FROM CLIENTES WHERE id_cliente = 101;", correct: false, reason: "Incorreto. A configuração é RESTRICT, e não CASCADE." },
+          { text: "O SGBD rejeita o DELETE imediatamente", code: "DELETE FROM CLIENTES WHERE id_cliente = 101;", correct: true, reason: "Exato! Com RESTRICT, o SGBD aborta a transação para não deixar pedidos sem titular." }
+        ]
+      }
+    ];
+
+    let current = 0;
+    let answered = false;
+
+    function render() {
+      answered = false;
+      const s = stages[current];
+      document.getElementById('case-title').innerText = s.title;
+      document.getElementById('case-desc').innerHTML = s.desc;
+      document.getElementById('table-view').innerHTML = s.table;
+      document.getElementById('case-hint').innerHTML = s.hint;
+      
+      const optBox = document.getElementById('opt-container');
+      optBox.innerHTML = '';
+      s.options.forEach((o, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-opt';
+        btn.innerHTML = `<span><strong>[${i+1}]</strong> ${o.text}</span><code>${o.code}</code>`;
+        btn.onclick = () => choose(i);
+        optBox.appendChild(btn);
+      });
+
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === current));
+      const fb = document.getElementById('feedback-box');
+      fb.className = 'feedback';
+      fb.style.display = 'none';
+      document.getElementById('btn-next').style.display = 'none';
+    }
+
+    function choose(idx) {
+      if (answered) return;
+      answered = true;
+      const s = stages[current];
+      const opt = s.options[idx];
+      const btns = document.querySelectorAll('.btn-opt');
+      const fb = document.getElementById('feedback-box');
+
+      btns.forEach((b, i) => {
+        b.disabled = true;
+        if (s.options[i].correct) b.classList.add('correct');
+      });
+
+      if (opt.correct) {
+        fb.className = 'feedback ok';
+      } else {
+        btns[idx].classList.add('wrong');
+        fb.className = 'feedback err';
+      }
+      fb.innerHTML = opt.reason;
+      document.getElementById('btn-next').style.display = 'block';
+    }
+
+    function reveal() {
+      const s = stages[current];
+      choose(s.options.findIndex(o => o.correct));
+    }
+
+    function nextStage() {
+      current++;
+      if (current < stages.length) render();
+      else {
+        document.getElementById('main-area').style.display = 'none';
+        document.getElementById('win').style.display = 'block';
+      }
+    }
+
+    function goStage(i) {
+      current = i;
+      document.getElementById('main-area').style.display = 'grid';
+      document.getElementById('win').style.display = 'none';
+      render();
+    }
+
+    function restart() { goStage(0); }
+
+    window.addEventListener('keydown', (e) => {
+      if (['1', '2', '3'].includes(e.key)) choose(parseInt(e.key) - 1);
+      if (e.key.toLowerCase() === 'r') reveal();
+      if (e.key === 'Enter' && answered) nextStage();
+      if (e.key.toLowerCase() === 'f') {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
